@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Admin</title>
+<style>body{font-family:Arial;padding:16px;background:#f6f6f6} .card{background:#fff;padding:10px;margin-bottom:10px;border-radius:6px}</style>
+</head>
+<body>
+<h2>Admin Panel</h2>
+<div id="list"></div>
+
+<script>
+async function load(){
+  const res = await fetch('/api/admin');
+  const data = await res.json();
+  const list = document.getElementById('list'); list.innerHTML='';
+  (data||[]).forEach(v=>{
+    const d = document.createElement('div'); d.className='card';
+    d.innerHTML = `<p>${v.filename}</p>
+      <video src="/videos/${v.filename}" controls style="width:100%;max-width:400px"></video>
+      <div style="margin-top:8px"><button onclick="del('${v.filename}')">Delete</button></div>`;
+    list.appendChild(d);
+  });
+}
+async function del(fn){
+  if(!confirm('Delete '+fn+' ?')) return;
+  await fetch(`/api/admin?action=delete&filename=${encodeURIComponent(fn)}`);
+  load();
+}
+load();
+</script>
+</body>
+</html>

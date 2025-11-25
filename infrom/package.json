@@ -1,0 +1,10 @@
+{
+  "name": "minitube",
+  "version": "1.0.0",
+  "dependencies": {
+    "formidable": "^3.0.0"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

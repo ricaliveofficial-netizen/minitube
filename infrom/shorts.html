@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Shorts</title>
+<style>body{font-family:Arial;background:#f6f6f6;margin:0;padding:16px}.card{background:#fff;padding:10px;border-radius:6px;margin-bottom:10px}</style>
+</head>
+<body>
+<h2>Short Videos</h2>
+<div id="list"></div>
+<script>
+async function loadShorts(){
+  const res = await fetch('/api/videos');
+  const data = await res.json();
+  const container = document.getElementById('list'); container.innerHTML='';
+  (data||[]).filter(v=>{
+    // quick heuristic: file size not available here; show all but user will upload shorts with title "short_..."
+    return v.title && v.title.toLowerCase().includes('short');
+  }).forEach(v=>{
+    const d=document.createElement('div'); d.className='card';
+    d.innerHTML=`<h4>${v.title}</h4><video controls style="width:100%" src="/videos/${v.filename}"></video>`;
+    container.appendChild(d);
+  });
+  if(!container.childElementCount) container.innerHTML='<p style="color:#888">No shorts yet</p>';
+}
+loadShorts();
+</script>
+</body>
+</html>
