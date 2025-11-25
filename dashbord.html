@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MiniTube — Home</title>
+<style>
+body{margin:0;font-family:Arial;background:#f6f6f6}
+.top{display:flex;justify-content:space-between;align-items:center;padding:14px;background:#007bff;color:#fff}
+.banner{width:100%;max-width:1000px;margin:14px auto;height:120px;position:relative;overflow:hidden;border-radius:8px}
+.banner img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
+.banner img.active{opacity:1}
+.container{max-width:1000px;margin:0 auto;padding:12px}
+.video-card{background:#fff;padding:12px;border-radius:8px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.video-card h3{margin:0 0 8px 0}
+.video-card video{width:100%;border-radius:6px}
+.engagement{display:flex;gap:10px;margin-top:10px}
+.eng-btn{background:#eee;border:0;padding:6px 10px;border-radius:6px;cursor:pointer}
+.ad-box{margin-top:12px;padding:10px;background:#f0f0f0;text-align:center;border-radius:6px;color:#444}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ddd;display:flex;justify-content:space-around;padding:10px 0}
+.nav-btn{background:none;border:0;font-size:18px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="top">
+  <div>MiniTube</div>
+  <div>
+    <button id="profileBtn">Profile</button>
+  </div>
+</div>
+
+<div class="banner" id="banner">
+  <img src="assets/banner1.jpg" class="active"/>
+  <img src="assets/banner2.jpg"/>
+  <img src="assets/banner3.jpg"/>
+</div>
+
+<div class="container" id="mainContainer">
+  <div id="videosArea"><p style="text-align:center;color:#888">No videos yet</p></div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn" id="homeBtn">🏠</button>
+  <button class="nav-btn" id="shortsBtn">🎬</button>
+  <button class="nav-btn" id="uploadBtn">⬆️</button>
+  <button class="nav-btn" id="logoutBtn">Logout</button>
+</div>
+
+<script>
+const user = JSON.parse(localStorage.getItem('minitube_user')||'null');
+if(!user) location.href='index.html';
+const banners = document.querySelectorAll('#banner img');
+let idx=0;
+setInterval(()=>{ banners[idx].classList.remove('active'); idx=(idx+1)%banners.length; banners[idx].classList.add('active'); },3000);
+
+document.getElementById('profileBtn').onclick = ()=> location.href='profile.html';
+document.getElementById('shortsBtn').onclick = ()=> location.href='shorts.html';
+document.getElementById('uploadBtn').onclick = ()=> {
+  if(!user.profileComplete) return alert('Complete profile first');
+  location.href='upload.html';
+};
+document.getElementById('logoutBtn').onclick = ()=> { localStorage.removeItem('minitube_user'); location.href='index.html'; };
+
+const API = '/api'; // redirects in netlify.toml -> /.netlify/functions
+
+function getCount(id,type){ return parseInt(localStorage.getItem(id+'_'+type)||'0'); }
+function toggleState(id,type){ const key=id+'_'+type+'_clicked'; const clicked = localStorage.getItem(key)==='true'; localStorage.setItem(key,!clicked); return !clicked; }
+
+async function loadVideos(){
+  try{
+    const res = await fetch(`${API}/videos`);
+    const data = await res.json();
+    const area = document.getElementById('videosArea');
+    area.innerHTML = '';
+    if(!data || !data.length) {
+      area.innerHTML = '<p style="text-align:center;color:#888">No videos yet</p>';
+      return;
+    }
+    data.forEach(v=>{
+      const div = document.createElement('div');
+      div.className='video-card';
+      const likeCount = getCount(v.filename,'like');
+      const commCount = getCount(v.filename,'comment');
+      const subCount = getCount(v.filename,'sub');
+      div.innerHTML = `
+        <h3>${v.title || v.filename}</h3>
+        <video controls src="/videos/${v.filename}"></video>
+        <div class="engagement">
+          <button class="eng-btn" onclick="(function(){ if(toggleState('${v.filename}','like')){ let n=${likeCount}+1; this.innerText='👍 '+n;} else { let n=${likeCount}-1; this.innerText='👍 '+n; } }).call(this) ">👍 Like (${likeCount})</button>
+          <button class="eng-btn" onclick="(function(){ if(toggleState('${v.filename}','comment')){ let n=${commCount}+1; this.innerText='💬 '+n;} else { let n=${commCount}-1; this.innerText='💬 '+n; } }).call(this) ">💬 Comment (${commCount})</button>
+          <button class="eng-btn" onclick="(function(){ if(toggleState('${v.filename}','sub')){ let n=${subCount}+1; this.innerText='🔔 '+n;} else { let n=${subCount}-1; this.innerText='🔔 '+n; } }).call(this) ">🔔 Subscribe (${subCount})</button>
+        </div>
+        <div class="ad-box">Ad Placeholder — replace with AdSense/AdMob/Start.io script</div>
+      `;
+      area.appendChild(div);
+    });
+  }catch(e){
+    console.error(e);
+  }
+}
+loadVideos();
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MiniTube — Profile</title>
+<style>
+body{font-family:Arial; background:#f6f6f6; padding:20px;}
+.container{max-width:480px;margin:20px auto;background:#fff;padding:16px;border-radius:8px;}
+input,button,textarea{width:100%;padding:8px;margin:8px 0;box-sizing:border-box;}
+.profile-pic{height:90px;width:90px;border-radius:8px;object-fit:cover;border:1px solid #ddd;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Complete Profile</h2>
+  <img id="preview" class="profile-pic" src="assets/logo.png" alt="profile"/>
+  <input type="file" id="photo" accept="image/*"/>
+  <input id="name" placeholder="Name"/>
+  <input id="email" placeholder="Email"/>
+  <label>
+    <input type="checkbox" id="monetize"/> Enable Monetization
+  </label>
+  <input id="ministudio" placeholder="Mini Studio (optional)"/>
+  <button id="saveBtn">Save Profile</button>
+</div>
+
+<script>
+const u = JSON.parse(localStorage.getItem('minitube_user')||'null');
+if(!u) location.href='index.html';
+document.getElementById('name').value = u.name || '';
+document.getElementById('email').value = u.email || '';
+
+const photoInput = document.getElementById('photo');
+photoInput.onchange = (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=> document.getElementById('preview').src = reader.result;
+  reader.readAsDataURL(f);
+};
+
+document.getElementById('saveBtn').onclick = ()=>{
+  const user = { ...u };
+  user.name = document.getElementById('name').value.trim();
+  user.email = document.getElementById('email').value.trim();
+  user.profileComplete = true;
+  user.monetize = document.getElementById('monetize').checked;
+  user.ministudio = document.getElementById('ministudio').value.trim();
+  // Save preview image (dataURI) if user uploaded
+  const previewSrc = document.getElementById('preview').src;
+  if(previewSrc && previewSrc.startsWith('data:')) user.photo = previewSrc;
+  localStorage.setItem('minitube_user', JSON.stringify(user));
+  alert('Profile saved');
+  location.href = 'dashboard.html';
+};
+</script>
+</body>
+</html>
